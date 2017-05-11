@@ -2,12 +2,14 @@
   'use strict';
 
   var canvas = document.createElement('canvas');
+  var bg = document.createElement('canvas');
   var ctx = canvas.getContext('2d');
+  var bg_ctx = bg.getContext('2d');
   var starting_cells = [];
   var redraw = false;
   var last_start = 0;
   var speed = 15; // speed/1000 is the max frames per second we try to draw. so speed = 10 gives 100fps max
-  var zoom = 1;
+  var zoom = 4;
   var generation = 0;
   var width;
   var height;
@@ -32,22 +34,24 @@
     }
   });
 
+  document.body.appendChild(bg);
   document.body.appendChild(canvas);
   resizeCanvas();
 
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // we use our background canvas to show visited trails (so we don't have to redraw every pixel on every draw)
+  bg_ctx.fillStyle = 'black';
+  bg_ctx.fillRect(0, 0, canvas.width, canvas.height);
+  bg_ctx.fillStyle = 'rgba(0, 100, 0, 0.01)';
+  bg_ctx.scale(zoom, zoom);
 
   // make our cells such that cells[x][y] = 0 if dead
   var cells = [];
-  var visited = [];
   for (var x=0; x<width; x++) {
     cells.push([]);
-    visited.push([]);
   }
   for (var y=0; y<height; y++) {
     cells.forEach(function(cell) {
       cell.push(0);
-      visited.push(0);
     });
   }
 
@@ -90,9 +94,8 @@
 
     generation++;
 
-    // blank the canvas
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = 'white';
 
@@ -112,12 +115,7 @@
           ctx.fillRect(x, y, 1, 1); // draw it
           cells[x][y] = 9; // max score is 8 so we use this for maximum awesome to allow keeping living living on score = 2 (9 + 2 = 11)
           living.push([x, y]);
-          visited[x][y] = true;
-        }
-        else if (visited[x][y]) {
-          ctx.fillStyle = '#333';
-          ctx.fillRect(x, y, 1, 1);
-          ctx.fillStyle = 'white';
+          bg_ctx.fillRect(x, y, 1, 1); // visited
         }
       }
     }
@@ -190,6 +188,8 @@
     redraw = false;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    bg.width = window.innerWidth;
+    bg.height = window.innerHeight;
     width = Math.ceil(canvas.width/zoom);
     height = Math.ceil(canvas.height/zoom);
     redraw = before;
