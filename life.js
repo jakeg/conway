@@ -5,13 +5,18 @@
   var ctx = canvas.getContext('2d');
   var starting_cells = [];
   var redraw = false;
+  //var zoom = 4;
 
   window.addEventListener('resize', resizeCanvas);
   window.addEventListener('keydown', function(e) {
     if (e.keyCode == 32) redraw = !redraw;
   });
   canvas.addEventListener('click', function(e) {
+    // toggle the cell we've clicked
+    //var x = e.offsetX/zoom;
+    //var y = e.offsetY/zoom;
     cells[e.offsetX][e.offsetY] = !cells[e.offsetX][e.offsetY];
+    ctx.fillStyle = cells[e.offsetX][e.offsetY] ? 'white' : 'black';
     if (!redraw) ctx.fillRect(e.offsetX, e.offsetY, 1, 1);
   });
 
@@ -59,24 +64,42 @@
 
     ctx.fillStyle = 'white';
 
-    var born = [];
+    //ctx.scale(2, 2);
 
+    var births = [];
+    var deaths = [];
+
+    var left;
+    var right;
+    var above;
+    var below;
     for (var x=0; x<canvas.width; x++) {
       for (var y=0; y<canvas.height; y++) {
-        if (cells[x][y]) {
-          ctx.fillRect(x, y, 1, 1);
-          cells[x][y] = false; // kill this one
-          born.push([x, y]);
-        }
+
+        // draw if alive
+        if (cells[x][y]) ctx.fillRect(x, y, 1, 1);
+
+        // look at our 8 neighbouring cells (wrapping around the canvas)
+        left = (x ? x - 1 : canvas.width - 1);
+        right = (x < canvas.width - 1 ? x + 1 : 0);
+        above = (y ? y - 1 : canvas.height - 1);
+        below = (y < canvas.height - 1 ? y + 1 : 0);
+
+        var score = cells[left][above] + cells[x][above] + cells[right][above] + cells[left][y] + cells[right][y] + cells[left][below] + cells[x][below] + cells[right][below];
+
+        if (cells[x][y] && score < 2 || score > 3) deaths.push([x, y]); // we died :(
+        if (!cells[x][y] && score == 3) births.push([x, y]); // we were born!
       }
     }
 
-    for (var i=0; i<born.length; i++) {
-      born[i][0]++;
-      born[i][1]++;
-      if (born[i][0] > canvas.width - 1) born[i][0] = 0;
-      if (born[i][1] > canvas.height - 1) born[i][1] = 0;
-      cells[born[i][0]][born[i][1]] = true;
+    // births
+    for (var i=0; i<births.length; i++) {
+      cells[births[i][0]][births[i][1]] = true;
+    };
+
+    // deaths
+    for (var i=0; i<deaths.length; i++) {
+      cells[deaths[i][0]][deaths[i][1]] = false;
     };
 
 
