@@ -7,7 +7,7 @@
   var redraw = false;
   var last_start = 0;
   var speed = 15; // speed/1000 is the max frames per second we try to draw. so speed = 10 gives 100fps max
-  var zoom = 4;
+  var zoom = 1;
   var generation = 0;
   var width;
   var height;
@@ -39,12 +39,15 @@
 
   // make our cells such that cells[x][y] = 0 if dead
   var cells = [];
+  var visited = [];
   for (var x=0; x<width; x++) {
     cells.push([]);
+    visited.push([]);
   }
   for (var y=0; y<height; y++) {
     cells.forEach(function(cell) {
       cell.push(0);
+      visited.push(0);
     });
   }
 
@@ -109,6 +112,12 @@
           ctx.fillRect(x, y, 1, 1); // draw it
           cells[x][y] = 9; // max score is 8 so we use this for maximum awesome to allow keeping living living on score = 2 (9 + 2 = 11)
           living.push([x, y]);
+          visited[x][y] = true;
+        }
+        else if (visited[x][y]) {
+          ctx.fillStyle = '#333';
+          ctx.fillRect(x, y, 1, 1);
+          ctx.fillStyle = 'white';
         }
       }
     }
