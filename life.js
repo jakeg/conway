@@ -5,7 +5,9 @@
   var ctx = canvas.getContext('2d');
   var starting_cells = [];
   var redraw = false;
-  //var zoom = 4;
+  var zoom = 8;
+  var width;
+  var height;
 
   window.addEventListener('resize', resizeCanvas);
   window.addEventListener('keydown', function(e) {
@@ -13,35 +15,34 @@
   });
   canvas.addEventListener('click', function(e) {
     // toggle the cell we've clicked
-    //var x = e.offsetX/zoom;
-    //var y = e.offsetY/zoom;
-    cells[e.offsetX][e.offsetY] = !cells[e.offsetX][e.offsetY];
-    ctx.fillStyle = cells[e.offsetX][e.offsetY] ? 'white' : 'black';
-    if (!redraw) ctx.fillRect(e.offsetX, e.offsetY, 1, 1);
+    var x = Math.floor(e.offsetX/zoom);
+    var y = Math.floor(e.offsetY/zoom);
+    console.log(e.offsetX, x);
+    cells[x][y] = !cells[x][y];
+    ctx.fillStyle = cells[x][y] ? 'white' : 'black';
+    if (!redraw) {
+      ctx.save();
+      ctx.scale(zoom, zoom);
+      ctx.fillRect(x, y, 1, 1);
+      ctx.restore();
+    }
   });
 
   document.body.appendChild(canvas);
   resizeCanvas();
 
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'white';
-
 
   // make our cells such that cells[x][y] = 0 if dead
   var cells = [];
-  for (var x=0; x<canvas.width; x++) {
+  for (var x=0; x<width; x++) {
     cells.push([]);
   }
-  for (var y=0; y<canvas.height; y++) {
+  for (var y=0; y<height; y++) {
     cells.forEach(function(cell) {
       cell.push(0);
     });
   }
-
-  starting_cells.forEach(function(cell) {
-    //cells[cell[0] + (cell[1]-1) * canvas.width] = 1;
-    cells[cell[0]][cell[1]] = true;
-  });
 
   draw();
   loop();
@@ -64,7 +65,8 @@
 
     ctx.fillStyle = 'white';
 
-    //ctx.scale(2, 2);
+    ctx.save();
+    ctx.scale(zoom, zoom);
 
     var births = [];
     var deaths = [];
@@ -73,17 +75,17 @@
     var right;
     var above;
     var below;
-    for (var x=0; x<canvas.width; x++) {
-      for (var y=0; y<canvas.height; y++) {
+    for (var x=0; x<width; x++) {
+      for (var y=0; y<height; y++) {
 
         // draw if alive
         if (cells[x][y]) ctx.fillRect(x, y, 1, 1);
 
         // look at our 8 neighbouring cells (wrapping around the canvas)
-        left = (x ? x - 1 : canvas.width - 1);
-        right = (x < canvas.width - 1 ? x + 1 : 0);
-        above = (y ? y - 1 : canvas.height - 1);
-        below = (y < canvas.height - 1 ? y + 1 : 0);
+        left = (x ? x - 1 : width - 1);
+        right = (x < width - 1 ? x + 1 : 0);
+        above = (y ? y - 1 : height - 1);
+        below = (y < height - 1 ? y + 1 : 0);
 
         var score = cells[left][above] + cells[x][above] + cells[right][above] + cells[left][y] + cells[right][y] + cells[left][below] + cells[x][below] + cells[right][below];
 
@@ -102,9 +104,11 @@
       cells[deaths[i][0]][deaths[i][1]] = false;
     };
 
+    ctx.restore();
+
 
     var end = Date.now();
-    ctx.fillText(end - start + 'ms', 10, canvas.height - 20);
+    ctx.fillText(width + ' x ' + height + ' ~ ' + (end - start) + 'ms ~ ' + Math.round(1000 / (end - start)) + 'fps', 10, canvas.height - 20);
   }
 
   function pause() {
@@ -120,6 +124,8 @@
     redraw = false;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    width = Math.ceil(canvas.width/zoom);
+    height = Math.ceil(canvas.height/zoom);
     redraw = before;
   }
 
