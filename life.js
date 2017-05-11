@@ -3,9 +3,17 @@
 
   var canvas = document.createElement('canvas');
   var ctx = canvas.getContext('2d');
-  window.redraw = false;
+  var starting_cells = [];
+  var redraw = false;
 
-  window.addEventListener('resize', function() {resizeCanvas()});
+  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('keydown', function(e) {
+    if (e.keyCode == 32) redraw = !redraw;
+  });
+  canvas.addEventListener('click', function(e) {
+    cells[e.offsetX][e.offsetY] = !cells[e.offsetX][e.offsetY];
+    if (!redraw) ctx.fillRect(e.offsetX, e.offsetY, 1, 1);
+  });
 
   document.body.appendChild(canvas);
   resizeCanvas();
@@ -14,78 +22,66 @@
   ctx.fillStyle = 'white';
 
 
-  // x, y, alive, x, y, alive, ...
+  // make our cells such that cells[x][y] = 0 if dead
   var cells = [];
-
-
+  for (var x=0; x<canvas.width; x++) {
+    cells.push([]);
+  }
   for (var y=0; y<canvas.height; y++) {
-    for (var x=0; x<canvas.width; x++) {
-      //cells.push(0);
-      cells.push([x, y, 0]);
-    }
+    cells.forEach(function(cell) {
+      cell.push(0);
+    });
   }
 
-  var starting_cells = [
-    [0, 5],
-    [50, 50],
-  ];
-
   starting_cells.forEach(function(cell) {
-    cells[cell[0] + (cell[1]-1) * canvas.width] = 1;
+    //cells[cell[0] + (cell[1]-1) * canvas.width] = 1;
+    cells[cell[0]][cell[1]] = true;
   });
 
   draw();
+  loop();
 
   // FUNCTIONS
 
+  function loop() {
+    if (redraw) draw();
+    window.requestAnimationFrame(loop);
+  }
+
   function draw() {
-    if (redraw) {
-      console.log('drawing');
+    console.log('drawing');
 
-      var start = Date.now();
+    var start = Date.now();
 
-      // blank the canvas
-      ctx.fillStyle = 'black';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // blank the canvas
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = 'white';
+    ctx.fillStyle = 'white';
 
-      /*
-      var i=0;
+    var born = [];
+
+    for (var x=0; x<canvas.width; x++) {
       for (var y=0; y<canvas.height; y++) {
-        for (var x=0; x<canvas.width; x++) {
-          if (cells[i]) {
-            ctx.fillRect(x, y, 1, 1);
-            cells[i] = 0;
-            cells[i-1] = 1;
-          }
-          i++;
+        if (cells[x][y]) {
+          ctx.fillRect(x, y, 1, 1);
+          cells[x][y] = false; // kill this one
+          born.push([x, y]);
         }
       }
-      */
-
-      cells.forEach(function(cell) {
-        if (cell[2]) ctx.fillRect(cell[0], cell[1], 1, 1);
-        cell[0]++;
-        cell[1]++;
-        if (cell[0] > canvas.width) cell[0] = 0;
-        if (cell[1] > canvas.height) cell[1] = 0;
-      });
-
-      /*
-      cells.forEach(function(cell) {
-        ctx.fillRect(cell[0], cell[1], 1, 1);
-        cell[0]++;
-        cell[1]++;
-        if (cell[0] > canvas.width) cell[0] = 0;
-        if (cell[1] > canvas.height) cell[1] = 0;
-      });
-      */
-
-      var end = Date.now();
-      ctx.fillText(end - start + 'ms', 10, canvas.height - 20);
     }
-    window.requestAnimationFrame(draw);
+
+    for (var i=0; i<born.length; i++) {
+      born[i][0]++;
+      born[i][1]++;
+      if (born[i][0] > canvas.width - 1) born[i][0] = 0;
+      if (born[i][1] > canvas.height - 1) born[i][1] = 0;
+      cells[born[i][0]][born[i][1]] = true;
+    };
+
+
+    var end = Date.now();
+    ctx.fillText(end - start + 'ms', 10, canvas.height - 20);
   }
 
   function pause() {
@@ -97,9 +93,11 @@
   }
   
   function resizeCanvas() {
+    var before = redraw;
+    redraw = false;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    redraw = true;
+    redraw = before;
   }
 
   window.pause = pause;
