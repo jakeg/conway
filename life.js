@@ -55,19 +55,17 @@
     });
   }
 
-  /*
-  starting_cells = [
-    [30, 60],
-    [30, 61],
-    [30, 62],
-    [31, 60],
-    [29, 61]
-  ];*/
 
-  // add a random seed
-  for (var x=Math.floor(width * 4.5/10); x<Math.floor(width * 5.5/10); x++) {
-    for (var y=Math.floor(height * 4.5/10); y<Math.floor(height * 5.5/10); y++) {
-      if (Math.floor(Math.random() * 10) + 1 === 1) starting_cells.push([x, y]);
+  // seed with several random clumps of cells
+  var clumping = 5; // % of the screen the clump fills
+  var clumpings = 20;
+  for (var i=0; i<clumpings; i++) {
+    var m = Math.floor(Math.random() * (100-clumping));
+    var n = Math.floor(Math.random() * (100-clumping));
+    for (var x=Math.floor(width * m/100); x<Math.floor(width * (m+clumping)/100); x++) {
+      for (var y=Math.floor(height * n/100); y<Math.floor(height * (n+clumping)/100); y++) {
+        if (Math.floor(Math.random() * 3) + 1 === 1) starting_cells.push([x, y]);
+      }
     }
   }
 
@@ -87,7 +85,7 @@
   }
 
   function draw() {
-    console.log('drawing');
+    // console.log('drawing');
 
     var start = Date.now();
     last_start = start;
