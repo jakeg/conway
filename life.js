@@ -35,12 +35,8 @@
   document.body.appendChild(bg)
   document.body.appendChild(canvas)
   resizeCanvas()
-
-  // we use our background canvas to show visited trails (so we don't have to redraw every pixel on every draw)
-  bgCtx.fillStyle = 'black'
-  bgCtx.fillRect(0, 0, canvas.width, canvas.height)
-  bgCtx.fillStyle = 'rgba(0, 100, 0, 0.01)'
-  bgCtx.scale(zoom, zoom)
+  width = Math.ceil(canvas.width / zoom)
+  height = Math.ceil(canvas.height / zoom)
 
   // make our cells such that cells[x][y] = 0 if dead
   const cells = []
@@ -71,29 +67,21 @@
   })
 
   redraw = true
-  draw()
-  loop()
+  drawLoop()
 
   // FUNCTIONS
 
-  function loop () {
+  function drawLoop () {
     if (redraw && Date.now() - lastStart > 1000 / speed) draw()
-    window.requestAnimationFrame(loop)
+    window.requestAnimationFrame(drawLoop)
   }
 
   function draw () {
-    // console.log('drawing');
-
     let start = Date.now()
     lastStart = start
-
     generation++
-
-    // clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-
     ctx.fillStyle = 'white'
-
     ctx.save()
     ctx.scale(zoom, zoom)
 
@@ -162,8 +150,14 @@
     ctx.font = '10px sans-serif'
     ctx.fillText(`${Math.round(1000 / (end - start))}fps`, canvas.width - 5, canvas.height - 5)
     ctx.restore()
+  }
 
-    // redraw = false;
+  function drawBackground () {
+    // we use our background canvas to show visited trails (so we don't have to redraw every pixel on every draw)
+    bgCtx.fillStyle = 'black'
+    bgCtx.fillRect(0, 0, canvas.width, canvas.height)
+    bgCtx.fillStyle = 'rgba(0, 100, 0, 0.01)'
+    bgCtx.scale(zoom, zoom)
   }
 
   function resizeCanvas () {
@@ -173,8 +167,7 @@
     canvas.height = document.body.clientHeight
     bg.width = document.body.clientWidth
     bg.height = document.body.clientHeight
-    width = Math.ceil(canvas.width / zoom)
-    height = Math.ceil(canvas.height / zoom)
     redraw = before
+    drawBackground()
   }
 })()
