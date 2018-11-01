@@ -1,3 +1,3 @@
 # Conway's game of life
 
-See it live at http://jakeg.co.uk/life.html
+[See it live.](https://www.jakeg.co.uk/conway/)
