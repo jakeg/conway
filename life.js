@@ -1,15 +1,13 @@
 (() => {
-  'use strict'
-
-  let canvas = document.createElement('canvas')
-  let bg = document.createElement('canvas')
-  let ctx = canvas.getContext('2d')
-  let bgCtx = bg.getContext('2d')
-  let startingCells = []
+  const canvas = document.createElement('canvas')
+  const bg = document.createElement('canvas')
+  const ctx = canvas.getContext('2d')
+  const bgCtx = bg.getContext('2d')
+  const startingCells = []
   let redraw = false
   let lastStart = 0
   let speed = 15 // speed/1000 is the max frames per second we try to draw. so speed = 10 gives 100fps max
-  let zoom = 4
+  const zoom = 4
   let generation = 0
   let width
   let height
@@ -171,10 +169,10 @@
   function resizeCanvas () {
     let before = redraw
     redraw = false
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
-    bg.width = window.innerWidth
-    bg.height = window.innerHeight
+    canvas.width = document.body.clientWidth
+    canvas.height = document.body.clientHeight
+    bg.width = document.body.clientWidth
+    bg.height = document.body.clientHeight
     width = Math.ceil(canvas.width / zoom)
     height = Math.ceil(canvas.height / zoom)
     redraw = before
