@@ -7,69 +7,73 @@
   let redraw = false
   let lastStart = 0
   let speed = 15 // speed/1000 is the max frames per second we try to draw. so speed = 10 gives 100fps max
+  const maxSpeed = 100
+  const speedMultiplier = 1.2
   const zoom = 4
   let generation = 0
   let width
   let height
-
-  window.addEventListener('resize', resizeCanvas)
-  window.addEventListener('keydown', (e) => {
-    if (e.keyCode === 32) redraw = !redraw // space bar to pause
-    if (e.keyCode === 187) speed = Math.min(100, speed + 1)
-    if (e.keyCode === 189) speed = Math.max(1, speed - 1)
-  })
-  canvas.addEventListener('click', (e) => {
-    // toggle the cell we've clicked
-    let x = Math.floor(e.offsetX / zoom)
-    let y = Math.floor(e.offsetY / zoom)
-    cells[x][y] = !cells[x][y]
-    ctx.fillStyle = cells[x][y] ? 'white' : 'black'
-    if (!redraw) {
-      ctx.save()
-      ctx.scale(zoom, zoom)
-      ctx.fillRect(x, y, 1, 1)
-      ctx.restore()
-    }
-  })
-
-  document.body.appendChild(bg)
-  document.body.appendChild(canvas)
-  resizeCanvas()
-  width = Math.ceil(canvas.width / zoom)
-  height = Math.ceil(canvas.height / zoom)
-
-  // make our cells such that cells[x][y] = 0 if dead
   const cells = []
-  for (let x = 0; x < width; x++) {
-    cells.push([])
-  }
-  for (let y = 0; y < height; y++) {
-    cells.forEach((cell) => {
-      cell.push(0)
-    })
-  }
 
-  // seed with several random clumps of cells
-  let clumping = 5 // % of the screen the clump fills
-  let clumpings = 20
-  for (let i = 0; i < clumpings; i++) {
-    let m = Math.floor(Math.random() * (100 - clumping))
-    let n = Math.floor(Math.random() * (100 - clumping))
-    for (let x = Math.floor(width * m / 100); x < Math.floor(width * (m + clumping) / 100); x++) {
-      for (let y = Math.floor(height * n / 100); y < Math.floor(height * (n + clumping) / 100); y++) {
-        if (Math.floor(Math.random() * 3) + 1 === 1) startingCells.push([x, y])
+  init()
+
+  function init () {
+    window.addEventListener('resize', resizeCanvas)
+    window.addEventListener('keydown', (e) => {
+      if (e.keyCode === 32) redraw = !redraw // space bar to pause
+      if (e.keyCode === 187) speed = Math.min(maxSpeed, Math.ceil(speed * speedMultiplier))
+      if (e.keyCode === 189) speed = Math.max(1, Math.floor(speed / speedMultiplier))
+    })
+    canvas.addEventListener('click', (e) => {
+      // toggle the cell we've clicked
+      let x = Math.floor(e.offsetX / zoom)
+      let y = Math.floor(e.offsetY / zoom)
+      cells[x][y] = !cells[x][y]
+      ctx.fillStyle = cells[x][y] ? 'white' : 'black'
+      if (!redraw) {
+        ctx.save()
+        ctx.scale(zoom, zoom)
+        ctx.fillRect(x, y, 1, 1)
+        ctx.restore()
+      }
+    })
+
+    document.body.appendChild(bg)
+    document.body.appendChild(canvas)
+    resizeCanvas()
+    width = Math.ceil(canvas.width / zoom)
+    height = Math.ceil(canvas.height / zoom)
+
+    // make our cells such that cells[x][y] = 0 if dead
+    for (let x = 0; x < width; x++) {
+      cells.push([])
+    }
+    for (let y = 0; y < height; y++) {
+      cells.forEach((cell) => {
+        cell.push(0)
+      })
+    }
+
+    // seed with several random clumps of cells
+    let clumping = 5 // % of the screen the clump fills
+    let clumpings = 20
+    for (let i = 0; i < clumpings; i++) {
+      let m = Math.floor(Math.random() * (100 - clumping))
+      let n = Math.floor(Math.random() * (100 - clumping))
+      for (let x = Math.floor(width * m / 100); x < Math.floor(width * (m + clumping) / 100); x++) {
+        for (let y = Math.floor(height * n / 100); y < Math.floor(height * (n + clumping) / 100); y++) {
+          if (Math.floor(Math.random() * 3) + 1 === 1) startingCells.push([x, y])
+        }
       }
     }
+
+    startingCells.forEach((cell) => {
+      cells[cell[0]][cell[1]] = 1
+    })
+
+    redraw = true
+    drawLoop()
   }
-
-  startingCells.forEach((cell) => {
-    cells[cell[0]][cell[1]] = 1
-  })
-
-  redraw = true
-  drawLoop()
-
-  // FUNCTIONS
 
   function drawLoop () {
     if (redraw && Date.now() - lastStart > 1000 / speed) draw()
@@ -139,12 +143,13 @@
 
     ctx.save()
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
-    ctx.fillRect(5, 5, 150, 70)
+    ctx.fillRect(5, 5, 190, 70)
     ctx.fillStyle = '#fff'
     ctx.font = '10px sans-serif'
     ctx.fillText(`${width} x ${height} ~ Generation: ${generation}`, 10, 20)
+    ctx.fillText('+ and - to change speed; space to pause', 10, 32)
     ctx.font = '20px sans-serif'
-    ctx.fillText(`Speed: ${Math.round(speed)}fps`, 10, 45)
+    ctx.fillText(`Speed: ${Math.round(speed)} gen/s`, 10, 55)
 
     ctx.textAlign = 'right'
     ctx.font = '10px sans-serif'
